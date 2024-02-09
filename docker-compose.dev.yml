@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:16.1
+    container_name: rinha-db
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: vertx
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: rinha
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
