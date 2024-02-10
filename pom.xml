@@ -19,6 +19,7 @@
 
     <vertx.version>4.5.2</vertx.version>
     <scram-client.version>2.1</scram-client.version>
+    <netty.version>4.1.106.Final</netty.version>
     <junit-jupiter.version>5.9.1</junit-jupiter.version>
   </properties>
 
@@ -32,6 +33,12 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-pg-client</artifactId>
       <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-epoll</artifactId>
+      <version>${netty.version}</version>
+      <classifier>linux-x86_64</classifier>
     </dependency>
     <dependency>
       <groupId>com.ongres.scram</groupId>
