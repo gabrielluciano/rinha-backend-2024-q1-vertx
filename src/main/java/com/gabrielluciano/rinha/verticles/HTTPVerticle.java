@@ -28,11 +28,11 @@ public class HTTPVerticle extends AbstractVerticle {
     HttpServer server = vertx.createHttpServer();
     Router router = Router.router(vertx);
 
-    Route transacao = router.route(HttpMethod.POST, "/clientes/:id/transacoes");
-    Route extrato = router.route(HttpMethod.GET, "/clientes/:id/extrato");
+    Route transacaoRoute = router.route(HttpMethod.POST, "/clientes/:id/transacoes");
+    Route extratoRoute = router.route(HttpMethod.GET, "/clientes/:id/extrato");
 
-    transacao.handler(BodyHandler.create()).handler(new TransacaoRoute(pool));
-    extrato.handler(new ExtratoRoute(pool));
+    transacaoRoute.handler(BodyHandler.create()).handler(new TransacaoRoute(pool));
+    extratoRoute.handler(new ExtratoRoute(pool));
 
     server.requestHandler(router).listen(port)
       .onComplete(ar -> {

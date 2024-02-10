@@ -1,16 +1,19 @@
 package com.gabrielluciano.rinha.routes;
 
+import com.gabrielluciano.rinha.entities.Cliente;
+import com.gabrielluciano.rinha.entities.Transacao;
 import com.gabrielluciano.rinha.exceptions.ClienteNaoEncontradoException;
+import com.gabrielluciano.rinha.repository.Repository;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.Tuple;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 
 public class ExtratoRoute implements Handler<RoutingContext> {
 
@@ -22,60 +25,52 @@ public class ExtratoRoute implements Handler<RoutingContext> {
 
   @Override
   public void handle(RoutingContext ctx) {
-    Integer clienteId = Integer.parseInt(ctx.pathParam("id"));
-    JsonObject response = new JsonObject();
+    Integer id = Integer.parseInt(ctx.pathParam("id"));
     JsonObject saldo = new JsonObject();
 
-    pool.withConnection(connection -> connection
-        .preparedQuery("SELECT saldo, limite FROM clientes WHERE id = $1")
-        .execute(Tuple.of(clienteId))
-        .flatMap(rowSet -> {
-          if (!rowSet.iterator().hasNext())
-            throw new ClienteNaoEncontradoException();
-
-          Row row = rowSet.iterator().next();
-          saldo.put("total", row.getInteger("saldo"));
-          saldo.put("limite", row.getInteger("limite"));
-
-          return connection
-            .preparedQuery(
-              """
-                   SELECT tipo, valor, descricao, realizada_em
-                   FROM transacoes WHERE cliente_id = $1
-                   ORDER BY realizada_em DESC
-                   LIMIT 10;
-                """
-            )
-            .execute(Tuple.of(clienteId));
-        })
-
-      )
-      .onSuccess(rows -> {
-        JsonArray transacoes = new JsonArray();
-        for (Row row : rows) {
-          JsonObject transacao = new JsonObject();
-          transacao.put("valor", row.getInteger("valor"));
-          transacao.put("tipo", row.getString("tipo"));
-          transacao.put("descricao", row.getString("descricao"));
-          transacao.put("realizada_em", row.getOffsetDateTime("realizada_em").toString());
-          transacoes.add(transacao);
-        }
-        saldo.put("data_extrato", OffsetDateTime.now(ZoneOffset.UTC).toString());
-        response.put("saldo", saldo);
-        response.put("ultimas_transacoes", transacoes);
-        ctx.response()
-          .setStatusCode(200)
-          .putHeader("Content-Type", "application/json")
-          .end(response.encode());
+    pool.withConnection(connection -> {
+        Repository repository = new Repository(connection);
+        return repository
+          .findClienteById(id)
+          .flatMap(cliente -> setSaldo(saldo, cliente))
+          .flatMap(cliente -> repository.getTransacoesByClienteId(cliente.getId()))
+          .flatMap(transacoes -> createResponse(transacoes, saldo));
       })
+      .onSuccess(response -> ctx.response()
+        .setStatusCode(200)
+        .putHeader("Content-Type", "application/json")
+        .end(response.encode())
+      )
       .onFailure(err -> {
         if (err instanceof ClienteNaoEncontradoException) {
           ctx.response().setStatusCode(404);
         } else {
-          err.printStackTrace();
           ctx.response().setStatusCode(500);
         }
         ctx.end();
       });
+  }
+
+  private Future<Cliente> setSaldo(JsonObject saldo, Cliente cliente) {
+    saldo.put("total", cliente.getSaldo());
+    saldo.put("limite", cliente.getLimite());
+    return Future.succeededFuture(cliente);
+  }
+
+  private Future<JsonObject> createResponse(List<Transacao> transacoes, JsonObject saldo) {
+    JsonObject response = new JsonObject();
+    JsonArray ultimasTransacoes = new JsonArray();
+    for (Transacao transacao : transacoes) {
+      JsonObject transacaoObject = new JsonObject();
+      transacaoObject.put("valor", transacao.getValor());
+      transacaoObject.put("tipo", transacao.getTipo());
+      transacaoObject.put("descricao", transacao.getDescricao());
+      transacaoObject.put("realizada_em", transacao.getRealizadaEm().toString());
+      ultimasTransacoes.add(transacaoObject);
+    }
+    saldo.put("data_extrato", OffsetDateTime.now(ZoneOffset.UTC).toString());
+    response.put("saldo", saldo);
+    response.put("ultimas_transacoes", ultimasTransacoes);
+    return Future.succeededFuture(response);
   }
 }
