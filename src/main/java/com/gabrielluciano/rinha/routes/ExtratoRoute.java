@@ -1,11 +1,12 @@
 package com.gabrielluciano.rinha.routes;
 
 import com.gabrielluciano.rinha.entities.Cliente;
-import com.gabrielluciano.rinha.entities.Transacao;
 import com.gabrielluciano.rinha.exceptions.ClienteNaoEncontradoException;
 import com.gabrielluciano.rinha.repository.Repository;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -13,9 +14,10 @@ import io.vertx.sqlclient.Pool;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 
 public class ExtratoRoute implements Handler<RoutingContext> {
+
+  private static final Logger logger = LoggerFactory.getLogger(ExtratoRoute.class);
 
   private final Pool pool;
 
@@ -45,6 +47,7 @@ public class ExtratoRoute implements Handler<RoutingContext> {
         if (err instanceof ClienteNaoEncontradoException) {
           ctx.response().setStatusCode(404);
         } else {
+          logger.error("Error processing request", err);
           ctx.response().setStatusCode(500);
         }
         ctx.end();
@@ -57,20 +60,11 @@ public class ExtratoRoute implements Handler<RoutingContext> {
     return Future.succeededFuture(cliente);
   }
 
-  private Future<JsonObject> createResponse(List<Transacao> transacoes, JsonObject saldo) {
+  private Future<JsonObject> createResponse(JsonArray transacoes, JsonObject saldo) {
     JsonObject response = new JsonObject();
-    JsonArray ultimasTransacoes = new JsonArray();
-    for (Transacao transacao : transacoes) {
-      JsonObject transacaoObject = new JsonObject();
-      transacaoObject.put("valor", transacao.getValor());
-      transacaoObject.put("tipo", String.valueOf(transacao.getTipo()));
-      transacaoObject.put("descricao", transacao.getDescricao());
-      transacaoObject.put("realizada_em", transacao.getRealizadaEm().toString());
-      ultimasTransacoes.add(transacaoObject);
-    }
     saldo.put("data_extrato", OffsetDateTime.now(ZoneOffset.UTC).toString());
     response.put("saldo", saldo);
-    response.put("ultimas_transacoes", ultimasTransacoes);
+    response.put("ultimas_transacoes", transacoes);
     return Future.succeededFuture(response);
   }
 }

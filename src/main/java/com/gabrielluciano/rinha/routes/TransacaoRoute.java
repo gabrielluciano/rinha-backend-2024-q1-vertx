@@ -9,6 +9,8 @@ import com.gabrielluciano.rinha.repository.Repository;
 import com.gabrielluciano.rinha.util.Validations;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
@@ -18,6 +20,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 public class TransacaoRoute implements Handler<RoutingContext> {
+
+  private static final Logger logger = LoggerFactory.getLogger(TransacaoRoute.class);
 
   private final Pool pool;
 
@@ -58,6 +62,7 @@ public class TransacaoRoute implements Handler<RoutingContext> {
         } else if (err instanceof SaldoInsuficienteException) {
           ctx.response().setStatusCode(422);
         } else {
+          logger.error("Error processing request", err);
           ctx.response().setStatusCode(500);
         }
         ctx.response().end();

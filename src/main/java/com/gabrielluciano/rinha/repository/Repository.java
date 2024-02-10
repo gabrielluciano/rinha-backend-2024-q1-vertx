@@ -5,13 +5,12 @@ import com.gabrielluciano.rinha.entities.Transacao;
 import com.gabrielluciano.rinha.exceptions.ClienteNaoEncontradoException;
 import com.gabrielluciano.rinha.sql.Query;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Repository {
 
@@ -48,7 +47,7 @@ public class Repository {
       .mapEmpty();
   }
 
-  public Future<List<Transacao>> getTransacoesByClienteId(Integer id) {
+  public Future<JsonArray> getTransacoesByClienteId(Integer id) {
     return connection
       .preparedQuery(Query.SELECT_TRANSACOES_BY_CLIENTE_ID)
       .execute(Tuple.of(id))
@@ -62,15 +61,14 @@ public class Repository {
     return Future.succeededFuture(cliente);
   }
 
-  private Future<List<Transacao>> transacoesFromRowSet(RowSet<Row> rowSet) {
-    List<Transacao> transacoes = new ArrayList<>();
+  private Future<JsonArray> transacoesFromRowSet(RowSet<Row> rowSet) {
+    JsonArray transacoes = new JsonArray();
     for (Row row : rowSet) {
-      Transacao transacao = Transacao.builder()
-        .tipo(row.getString("tipo").charAt(0))
-        .valor(row.getInteger("valor"))
-        .descricao(row.getString("descricao"))
-        .realizadaEm(row.getOffsetDateTime("realizada_em"))
-        .build();
+      JsonObject transacao = new JsonObject();
+      transacao.put("valor", row.getInteger("valor"));
+      transacao.put("tipo", row.getString("tipo"));
+      transacao.put("descricao", row.getString("descricao"));
+      transacao.put("realizada_em", row.getOffsetDateTime("realizada_em").toString());
       transacoes.add(transacao);
     }
     return Future.succeededFuture(transacoes);

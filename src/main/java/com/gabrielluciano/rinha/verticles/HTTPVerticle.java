@@ -5,6 +5,7 @@ import com.gabrielluciano.rinha.routes.TransacaoRoute;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
@@ -25,7 +26,12 @@ public class HTTPVerticle extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    HttpServer server = vertx.createHttpServer();
+    HttpServerOptions options = new HttpServerOptions()
+      .setTcpFastOpen(true)
+      .setTcpNoDelay(true)
+      .setTcpQuickAck(true);
+
+    HttpServer server = vertx.createHttpServer(options);
     Router router = Router.router(vertx);
 
     Route transacaoRoute = router.route(HttpMethod.POST, "/clientes/:id/transacoes");
