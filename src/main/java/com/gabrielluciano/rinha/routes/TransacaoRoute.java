@@ -31,7 +31,6 @@ public class TransacaoRoute implements Handler<RoutingContext> {
 
     if (isInvalidRequest(ctx.body())) {
       ctx.response().setStatusCode(422).end();
-      ctx.response().end();
       return;
     }
 

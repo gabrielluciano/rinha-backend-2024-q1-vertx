@@ -40,8 +40,9 @@ public class Repository {
       .preparedQuery(Query.INSERT_TRANSACAO)
       .execute(Tuple.of(
         transacao.getClienteId(),
-        transacao.getTipo(),
+        String.valueOf(transacao.getTipo()),
         transacao.getValor(),
+        transacao.getDescricao(),
         transacao.getRealizadaEm()
       ))
       .mapEmpty();

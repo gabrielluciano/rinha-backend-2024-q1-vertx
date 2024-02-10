@@ -27,7 +27,7 @@ public class Cliente {
   }
 
   public boolean canUpdateSaldo(TransacaoRequest request) {
-    return request.isDebito() && hasEnoughSaldo(request.getValor());
+    return request.isCredito() || hasEnoughSaldo(request.getValor());
   }
 
   public boolean cannotUpdateSaldo(TransacaoRequest request) {

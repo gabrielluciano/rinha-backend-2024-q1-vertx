@@ -63,7 +63,7 @@ public class ExtratoRoute implements Handler<RoutingContext> {
     for (Transacao transacao : transacoes) {
       JsonObject transacaoObject = new JsonObject();
       transacaoObject.put("valor", transacao.getValor());
-      transacaoObject.put("tipo", transacao.getTipo());
+      transacaoObject.put("tipo", String.valueOf(transacao.getTipo()));
       transacaoObject.put("descricao", transacao.getDescricao());
       transacaoObject.put("realizada_em", transacao.getRealizadaEm().toString());
       ultimasTransacoes.add(transacaoObject);
