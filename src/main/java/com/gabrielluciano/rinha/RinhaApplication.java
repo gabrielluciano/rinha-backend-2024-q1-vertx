@@ -18,6 +18,7 @@ public class RinhaApplication {
 
     PgConnectOptions connectOptions = new PgConnectOptions()
       .setCachePreparedStatements(true)
+      .setHost(System.getenv("PGHOST"))
       .setPort(5432)
       .setDatabase("rinha")
       .setUser("vertx")

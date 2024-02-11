@@ -6,7 +6,7 @@ services:
       - database
     environment:
       - HTTP_PORT=8080
-      - PGHOST=database
+      - PGHOST=127.0.0.1
       - POOL_SIZE=5
     network_mode: "host"
     deploy:
@@ -20,7 +20,7 @@ services:
     hostname: api2
     environment:
       - HTTP_PORT=8081
-      - PGHOST=database
+      - PGHOST=127.0.0.1
       - POOL_SIZE=5
     deploy:
       resources:
