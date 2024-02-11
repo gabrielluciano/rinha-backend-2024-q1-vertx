@@ -4,6 +4,8 @@ public class Query {
 
   public static final String SELECT_CLIENTE_BY_ID = "SELECT id, saldo, limite FROM clientes WHERE id = $1";
 
+  public static final String SELECT_CLIENTE_BY_ID_FOR_UPDATE = "SELECT id, saldo, limite FROM clientes WHERE id = $1 FOR UPDATE";
+
   public static final String UPDATE_CLIENTE = "UPDATE clientes SET saldo = $1 WHERE id = $2";
 
   public static final String INSERT_TRANSACAO = """

@@ -44,7 +44,7 @@ public class TransacaoRoute implements Handler<RoutingContext> {
     pool.withTransaction(connection -> {
         Repository repository = new Repository(connection);
         return repository
-          .findClienteById(id)
+          .findClienteByIdForUpdate(id)
           .flatMap(cliente -> updateSaldoCliente(cliente, transacaoRequest))
           .flatMap(cliente -> setResponse(response, cliente))
           .flatMap(repository::saveCliente)

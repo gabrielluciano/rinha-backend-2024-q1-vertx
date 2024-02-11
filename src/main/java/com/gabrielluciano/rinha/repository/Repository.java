@@ -27,6 +27,13 @@ public class Repository {
       .flatMap(this::clienteFromRowSet);
   }
 
+  public Future<Cliente> findClienteByIdForUpdate(Integer id) {
+    return connection
+      .preparedQuery(Query.SELECT_CLIENTE_BY_ID_FOR_UPDATE)
+      .execute(Tuple.of(id))
+      .flatMap(this::clienteFromRowSet);
+  }
+
   public Future<Void> saveCliente(Cliente cliente) {
     return connection
       .preparedQuery(Query.UPDATE_CLIENTE)

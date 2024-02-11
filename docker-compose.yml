@@ -1,6 +1,6 @@
 services:
   api1: &api
-    image: gabrielluciano/rinha-2024-q1-vertx:1.0.0
+    image: gabrielluciano/rinha-2024-q1-vertx:1.0.3
     hostname: api1
     depends_on:
       - database
