@@ -17,7 +17,7 @@
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
 
-    <vertx.version>4.5.2</vertx.version>
+    <vertx.version>4.5.3</vertx.version>
     <scram-client.version>2.1</scram-client.version>
     <junit-jupiter.version>5.9.1</junit-jupiter.version>
   </properties>
