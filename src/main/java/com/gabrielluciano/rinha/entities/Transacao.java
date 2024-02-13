@@ -1,87 +1,55 @@
 package com.gabrielluciano.rinha.entities;
 
-import java.time.OffsetDateTime;
+import com.gabrielluciano.rinha.util.Validations;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RequestBody;
 
 public class Transacao {
 
   private final int clienteId;
-  private final char tipo;
-  private final int valor;
+  private final String tipo;
+  private final String valor;
   private final String descricao;
-  private final OffsetDateTime realizadaEm;
+
+  private Transacao(int clienteId, String tipo, String valor, String descricao) {
+    this.clienteId = clienteId;
+    this.tipo = tipo;
+    this.valor = valor;
+    this.descricao = descricao;
+  }
+
+  public static Transacao fromRequestBodyAndClienteId(RequestBody body, int clienteId) {
+    JsonObject json = body.asJsonObject();
+    String tipo = json.getString("tipo");
+    String valor = json.getString("valor");
+    String descricao = json.getString("descricao");
+
+    return new Transacao(clienteId, tipo, valor, descricao);
+  }
+
+  public boolean isValid() {
+    return Validations.isValidTipo(this.tipo)
+      && Validations.isValidValor(this.valor)
+      && Validations.isValidDescricao(this.descricao);
+  }
+
+  public boolean isNotValid() {
+    return !isValid();
+  }
 
   public int getClienteId() {
     return clienteId;
   }
 
-  public char getTipo() {
+  public String getTipo() {
     return tipo;
   }
 
-  public int getValor() {
+  public String getValor() {
     return valor;
   }
 
   public String getDescricao() {
     return descricao;
-  }
-
-  public OffsetDateTime getRealizadaEm() {
-    return realizadaEm;
-  }
-
-  private Transacao(int clienteId, char tipo, int valor, String descricao, OffsetDateTime realizadaEm) {
-    this.clienteId = clienteId;
-    this.tipo = tipo;
-    this.valor = valor;
-    this.descricao = descricao;
-    this.realizadaEm = realizadaEm;
-  }
-
-  public static Transacao.Builder builder() {
-    return new Transacao.Builder();
-  }
-
-  public static class Builder {
-    private int clienteId;
-    private char tipo;
-    private int valor;
-    private String descricao;
-    private OffsetDateTime realizadaEm;
-
-    public Transacao build() {
-      return new Transacao(
-        this.clienteId,
-        this.tipo,
-        this.valor,
-        this.descricao,
-        this.realizadaEm
-      );
-    }
-
-    public Builder clienteId(int clienteId) {
-      this.clienteId = clienteId;
-      return this;
-    }
-
-    public Builder tipo(char tipo) {
-      this.tipo = tipo;
-      return this;
-    }
-
-    public Builder valor(int valor) {
-      this.valor = valor;
-      return this;
-    }
-
-    public Builder descricao(String descricao) {
-      this.descricao = descricao;
-      return this;
-    }
-
-    public Builder realizadaEm(OffsetDateTime realizadaEm) {
-      this.realizadaEm = realizadaEm;
-      return this;
-    }
   }
 }
