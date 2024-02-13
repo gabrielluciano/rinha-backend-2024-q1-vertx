@@ -8,7 +8,7 @@ RUN chown 1001 /work \
 
 COPY --chown=1001:root rinha-1.0.0 /work/rinha
 
-EXPOSE 8080
+EXPOSE 8080 8081
 USER 1001
 
 CMD ["./rinha"]

@@ -1,0 +1,15 @@
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /work
+
+RUN chown 1001 /work \
+    && chmod "g+rwX" /work \
+    && chown 1001:root /work
+
+COPY --chown=1001:root target/rinha-1.0.0.jar /work/rinha.jar
+
+EXPOSE 8080 8081
+
+USER 1001
+
+CMD ["java", "-jar", "rinha.jar"]
