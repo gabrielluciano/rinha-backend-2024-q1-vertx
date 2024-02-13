@@ -1,5 +1,6 @@
 package com.gabrielluciano.rinha.verticles;
 
+import com.gabrielluciano.rinha.repository.Repository;
 import com.gabrielluciano.rinha.routes.ExtratoRoute;
 import com.gabrielluciano.rinha.routes.TransacaoRoute;
 import io.vertx.core.AbstractVerticle;
@@ -31,8 +32,10 @@ public class HTTPVerticle extends AbstractVerticle {
     Route transacaoRoute = router.route(HttpMethod.POST, "/clientes/:id/transacoes");
     Route extratoRoute = router.route(HttpMethod.GET, "/clientes/:id/extrato");
 
-    transacaoRoute.handler(BodyHandler.create()).handler(new TransacaoRoute(pool));
-    extratoRoute.handler(new ExtratoRoute(pool));
+    Repository repository = new Repository(pool);
+
+    transacaoRoute.handler(BodyHandler.create()).handler(new TransacaoRoute(repository));
+    extratoRoute.handler(new ExtratoRoute(repository));
 
     server.requestHandler(router).listen(port)
       .onComplete(ar -> {

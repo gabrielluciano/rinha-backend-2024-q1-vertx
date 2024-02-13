@@ -1,70 +1,43 @@
 package com.gabrielluciano.rinha.routes;
 
-import com.gabrielluciano.rinha.entities.Cliente;
 import com.gabrielluciano.rinha.exceptions.ClienteNaoEncontradoException;
 import com.gabrielluciano.rinha.repository.Repository;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.sqlclient.Pool;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 public class ExtratoRoute implements Handler<RoutingContext> {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtratoRoute.class);
 
-  private final Pool pool;
+  private final Repository repository;
 
-  public ExtratoRoute(Pool pool) {
-    this.pool = pool;
+  public ExtratoRoute(Repository repository) {
+    this.repository = repository;
   }
 
   @Override
   public void handle(RoutingContext ctx) {
     Integer id = Integer.parseInt(ctx.pathParam("id"));
-    JsonObject saldo = new JsonObject();
 
-    pool.withConnection(connection -> {
-        Repository repository = new Repository(connection);
-        return repository
-          .findClienteById(id)
-          .flatMap(cliente -> setSaldo(saldo, cliente))
-          .flatMap(cliente -> repository.getTransacoesByClienteId(cliente.getId()))
-          .flatMap(transacoes -> createResponse(transacoes, saldo));
-      })
+    repository.getTransacoesByClienteId(id)
       .onSuccess(response -> ctx.response()
         .setStatusCode(200)
         .putHeader("Content-Type", "application/json")
         .end(response.encode())
       )
       .onFailure(err -> {
-        if (err instanceof ClienteNaoEncontradoException) {
-          ctx.response().setStatusCode(404);
-        } else {
+        int errorStatusCode = getErrorStatusCode(err);
+        if (errorStatusCode == 500)
           logger.error("Error processing request", err);
-          ctx.response().setStatusCode(500);
-        }
-        ctx.end();
+        ctx.response().setStatusCode(errorStatusCode).end();
       });
   }
 
-  private Future<Cliente> setSaldo(JsonObject saldo, Cliente cliente) {
-    saldo.put("total", cliente.getSaldo());
-    saldo.put("limite", cliente.getLimite());
-    return Future.succeededFuture(cliente);
-  }
-
-  private Future<JsonObject> createResponse(JsonArray transacoes, JsonObject saldo) {
-    JsonObject response = new JsonObject();
-    saldo.put("data_extrato", OffsetDateTime.now(ZoneOffset.UTC).toString());
-    response.put("saldo", saldo);
-    response.put("ultimas_transacoes", transacoes);
-    return Future.succeededFuture(response);
+  private int getErrorStatusCode(Throwable err) {
+    if (err instanceof ClienteNaoEncontradoException)
+      return 404;
+    return 500;
   }
 }
