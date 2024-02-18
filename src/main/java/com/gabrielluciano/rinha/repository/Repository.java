@@ -6,9 +6,9 @@ import com.gabrielluciano.rinha.sql.Query;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.Tuple;
 
 import java.time.OffsetDateTime;
@@ -16,42 +16,40 @@ import java.time.ZoneOffset;
 
 public class Repository {
 
-  private final Pool pool;
+  private final SqlClient sqlClient;
 
-  public Repository(Pool pool) {
-    this.pool = pool;
+  public Repository(SqlClient sqlClient) {
+    this.sqlClient = sqlClient;
   }
 
   public Future<JsonObject> doTransacao(Transacao transacao) {
-    return pool.withConnection(connection -> connection
+    return sqlClient
       .preparedQuery(Query.UPDATE_SALDO_CLIENTE)
       .execute(Tuple.of(
         transacao.getClienteId(),
         Integer.parseInt(transacao.getValor()),
         transacao.getTipo(),
         transacao.getDescricao()
-      )).flatMap(result -> {
+      )).map(result -> {
         Row row = result.iterator().next();
-        return Future.succeededFuture(
-          new JsonObject()
-            .put("limite", row.getInteger("limite"))
-            .put("saldo", row.getInteger("new_saldo"))
-        );
-      }));
+        return new JsonObject()
+          .put("limite", row.getInteger("limite"))
+          .put("saldo", row.getInteger("new_saldo"));
+      });
   }
 
   public Future<JsonObject> getTransacoesByClienteId(Integer id) {
     JsonObject response = new JsonObject();
-    return pool.withConnection(connection -> connection
+    return sqlClient
       .preparedQuery(Query.SELECT_CLIENTE_BY_ID)
       .execute(Tuple.of(id))
       .flatMap(rs -> setSaldoFromRowSet(response, rs))
-      .flatMap(res -> connection
+      .flatMap(res -> sqlClient
         .preparedQuery(Query.SELECT_TRANSACOES_BY_CLIENTE_ID)
         .execute(Tuple.of(id))
         .flatMap(rs -> setTransacoesFromRowSet(response, rs))
       )
-      .map(res -> response));
+      .map(res -> response);
   }
 
   private Future<Void> setTransacoesFromRowSet(JsonObject response, RowSet<Row> rs) {

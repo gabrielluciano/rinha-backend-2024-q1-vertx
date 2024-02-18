@@ -11,17 +11,17 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.SqlClient;
 
 public class HTTPVerticle extends AbstractVerticle {
 
-  private final Pool pool;
+  private final SqlClient sqlClient;
   private final Logger logger = LoggerFactory.getLogger(HTTPVerticle.class);
   private final int port = Integer.parseInt(System.getenv("HTTP_PORT"));
 
-  public HTTPVerticle(Pool pool) {
+  public HTTPVerticle(SqlClient sqlClient) {
     super();
-    this.pool = pool;
+    this.sqlClient = sqlClient;
   }
 
   @Override
@@ -32,7 +32,7 @@ public class HTTPVerticle extends AbstractVerticle {
     Route transacaoRoute = router.route(HttpMethod.POST, "/clientes/:id/transacoes");
     Route extratoRoute = router.route(HttpMethod.GET, "/clientes/:id/extrato");
 
-    Repository repository = new Repository(pool);
+    Repository repository = new Repository(sqlClient);
 
     transacaoRoute.handler(BodyHandler.create()).handler(new TransacaoRoute(repository));
     extratoRoute.handler(new ExtratoRoute(repository));

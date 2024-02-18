@@ -6,8 +6,8 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
-import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.SqlClient;
 
 public class RinhaApplication {
 
@@ -27,14 +27,14 @@ public class RinhaApplication {
     PoolOptions poolOptions = new PoolOptions()
       .setMaxSize(Integer.parseInt(System.getenv("POOL_SIZE")));
 
-    Pool pool = PgBuilder
-      .pool()
+    SqlClient client = PgBuilder
+      .client()
       .with(poolOptions)
       .connectingTo(connectOptions)
       .using(vertx)
       .build();
 
-    vertx.deployVerticle(new HTTPVerticle(pool))
+    vertx.deployVerticle(new HTTPVerticle(client))
       .onSuccess(handler -> logger.info("HTTP Verticle deployed"));
   }
 }
