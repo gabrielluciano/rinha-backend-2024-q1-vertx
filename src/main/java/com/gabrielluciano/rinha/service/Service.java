@@ -1,6 +1,6 @@
-package com.gabrielluciano.rinha.repository;
+package com.gabrielluciano.rinha.service;
 
-import com.gabrielluciano.rinha.entities.Transacao;
+import com.gabrielluciano.rinha.dto.TransacaoRequest;
 import com.gabrielluciano.rinha.exceptions.ClienteNaoEncontradoException;
 import com.gabrielluciano.rinha.sql.Query;
 import io.vertx.core.Future;
@@ -14,22 +14,22 @@ import io.vertx.sqlclient.Tuple;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-public class Repository {
+public class Service {
 
   private final SqlClient sqlClient;
 
-  public Repository(SqlClient sqlClient) {
+  public Service(SqlClient sqlClient) {
     this.sqlClient = sqlClient;
   }
 
-  public Future<JsonObject> doTransacao(Transacao transacao) {
+  public Future<JsonObject> saveTransacao(TransacaoRequest transacaoRequest) {
     return sqlClient
       .preparedQuery(Query.UPDATE_SALDO_CLIENTE)
       .execute(Tuple.of(
-        transacao.getClienteId(),
-        Integer.parseInt(transacao.getValor()),
-        transacao.getTipo(),
-        transacao.getDescricao()
+        transacaoRequest.getClienteId(),
+        Integer.parseInt(transacaoRequest.getValor()),
+        transacaoRequest.getTipo(),
+        transacaoRequest.getDescricao()
       )).map(result -> {
         Row row = result.iterator().next();
         return new JsonObject()
@@ -38,7 +38,7 @@ public class Repository {
       });
   }
 
-  public Future<JsonObject> getTransacoesByClienteId(Integer id) {
+  public Future<JsonObject> getExtratoByClienteId(Integer id) {
     JsonObject response = new JsonObject();
     return sqlClient
       .preparedQuery(Query.SELECT_CLIENTE_BY_ID)
@@ -52,29 +52,27 @@ public class Repository {
       .map(res -> response);
   }
 
-  private Future<Void> setTransacoesFromRowSet(JsonObject response, RowSet<Row> rs) {
-    JsonArray transacoes = new JsonArray();
-    for (Row row : rs) {
-      JsonObject transacao = new JsonObject();
-      transacao.put("valor", row.getInteger("valor"));
-      transacao.put("tipo", row.getString("tipo"));
-      transacao.put("descricao", row.getString("descricao"));
-      transacao.put("realizada_em", row.getOffsetDateTime("realizada_em").toString());
-      transacoes.add(transacao);
-    }
-    response.put("ultimas_transacoes", transacoes);
-    return Future.succeededFuture(null);
-  }
-
   private Future<Void> setSaldoFromRowSet(JsonObject response, RowSet<Row> rs) {
     if (!rs.iterator().hasNext())
       return Future.failedFuture(new ClienteNaoEncontradoException());
     Row row = rs.iterator().next();
-    JsonObject saldo = new JsonObject();
-    saldo.put("total", row.getInteger("saldo"));
-    saldo.put("data_extrato", OffsetDateTime.now(ZoneOffset.UTC).toString());
-    saldo.put("limite", row.getInteger("limite"));
-    response.put("saldo", saldo);
+    response.put("saldo", new JsonObject()
+      .put("total", row.getInteger("saldo"))
+      .put("data_extrato", OffsetDateTime.now(ZoneOffset.UTC).toString())
+      .put("limite", row.getInteger("limite")));
+    return Future.succeededFuture(null);
+  }
+
+  private Future<Void> setTransacoesFromRowSet(JsonObject response, RowSet<Row> rs) {
+    JsonArray transacoes = new JsonArray();
+    for (Row row : rs) {
+      transacoes.add(new JsonObject()
+        .put("valor", row.getInteger("valor"))
+        .put("tipo", row.getString("tipo"))
+        .put("descricao", row.getString("descricao"))
+        .put("realizada_em", row.getOffsetDateTime("realizada_em").toString()));
+    }
+    response.put("ultimas_transacoes", transacoes);
     return Future.succeededFuture(null);
   }
 }

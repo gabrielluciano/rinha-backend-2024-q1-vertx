@@ -1,30 +1,30 @@
-package com.gabrielluciano.rinha.entities;
+package com.gabrielluciano.rinha.dto;
 
 import com.gabrielluciano.rinha.util.Validations;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
 
-public class Transacao {
+public class TransacaoRequest {
 
   private final int clienteId;
   private final String tipo;
   private final String valor;
   private final String descricao;
 
-  private Transacao(int clienteId, String tipo, String valor, String descricao) {
+  private TransacaoRequest(int clienteId, String tipo, String valor, String descricao) {
     this.clienteId = clienteId;
     this.tipo = tipo;
     this.valor = valor;
     this.descricao = descricao;
   }
 
-  public static Transacao fromRequestBodyAndClienteId(RequestBody body, int clienteId) {
+  public static TransacaoRequest fromRequestBodyAndClienteId(RequestBody body, int clienteId) {
     JsonObject json = body.asJsonObject();
     String tipo = json.getString("tipo");
     String valor = json.getString("valor");
     String descricao = json.getString("descricao");
 
-    return new Transacao(clienteId, tipo, valor, descricao);
+    return new TransacaoRequest(clienteId, tipo, valor, descricao);
   }
 
   public boolean isValid() {
