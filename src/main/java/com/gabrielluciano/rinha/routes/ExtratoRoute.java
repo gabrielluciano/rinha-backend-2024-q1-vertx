@@ -1,7 +1,7 @@
 package com.gabrielluciano.rinha.routes;
 
 import com.gabrielluciano.rinha.exceptions.ClienteNaoEncontradoException;
-import com.gabrielluciano.rinha.repository.Repository;
+import com.gabrielluciano.rinha.service.Service;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -11,17 +11,17 @@ public class ExtratoRoute implements Handler<RoutingContext> {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtratoRoute.class);
 
-  private final Repository repository;
+  private final Service service;
 
-  public ExtratoRoute(Repository repository) {
-    this.repository = repository;
+  public ExtratoRoute(Service service) {
+    this.service = service;
   }
 
   @Override
   public void handle(RoutingContext ctx) {
     Integer id = Integer.parseInt(ctx.pathParam("id"));
 
-    repository.getTransacoesByClienteId(id)
+    service.getExtratoByClienteId(id)
       .onSuccess(response -> ctx.response()
         .setStatusCode(200)
         .putHeader("Content-Type", "application/json")

@@ -1,7 +1,7 @@
 package com.gabrielluciano.rinha.routes;
 
-import com.gabrielluciano.rinha.entities.Transacao;
-import com.gabrielluciano.rinha.repository.Repository;
+import com.gabrielluciano.rinha.dto.TransacaoRequest;
+import com.gabrielluciano.rinha.service.Service;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -14,23 +14,23 @@ public class TransacaoRoute implements Handler<RoutingContext> {
   private static final String NOT_ENOUGH_SALDO_ERROR_CODE = "P0000";
   private static final Logger logger = LoggerFactory.getLogger(TransacaoRoute.class);
 
-  private final Repository repository;
+  private final Service service;
 
-  public TransacaoRoute(Repository repository) {
-    this.repository = repository;
+  public TransacaoRoute(Service service) {
+    this.service = service;
   }
 
   @Override
   public void handle(RoutingContext ctx) {
     int id = Integer.parseInt(ctx.pathParam("id"));
-    Transacao transacao = Transacao.fromRequestBodyAndClienteId(ctx.body(), id);
+    TransacaoRequest transacaoRequest = TransacaoRequest.fromRequestBodyAndClienteId(ctx.body(), id);
 
-    if (transacao.isNotValid()) {
+    if (transacaoRequest.isNotValid()) {
       ctx.response().setStatusCode(422).end();
       return;
     }
 
-    repository.doTransacao(transacao)
+    service.saveTransacao(transacaoRequest)
       .onSuccess(response -> ctx.response()
         .setStatusCode(200)
         .putHeader("Content-Type", "application/json")

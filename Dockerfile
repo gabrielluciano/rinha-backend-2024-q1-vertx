@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM debian:bookworm
 
 WORKDIR /work/
 
